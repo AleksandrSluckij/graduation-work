@@ -1,0 +1,34 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    username: diplomauser
+    password: Ctynz,hm22
+    url: jdbc:mysql://localhost:3306/search_engine_?useSSL=false&requireSSL=false&allowPublicKeyRetrieval=true
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+
+indexing-settings:
+  sites:
+#    - url: https://www.lenta.ru
+#      name: Лента.ру
+    - url: https://nikoartgallery.com
+      name: Галерея искусств Niko
+#    - url: https://www.skillbox.ru
+#      name: Skillbox
+#    - url: https://www.playback.ru
+#      name: PlayBack.Ru
+    - url: https://www.lutherancathedral.ru
+      name: Собор Петра и Павла
+    - url: https://ipfran.ru
+      name: Институт прикладной физики РАН
+
+user-agent-name: 67SearchBot
+referer-name: http://www.google.com
