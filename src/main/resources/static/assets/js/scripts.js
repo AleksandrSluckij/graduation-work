@@ -1476,6 +1476,11 @@ var API = function(){
                     } else {
                         $this.after('<div class="API-error">' + result.error + '</div>');
                     }
+                    // --- Added to provide an opportunity to stop indexing manually
+                    if ($this.is('[data-btntype="check"]')) {
+                        shiftCheck($this);
+                    }
+                    // ---
                 }
             }
         },

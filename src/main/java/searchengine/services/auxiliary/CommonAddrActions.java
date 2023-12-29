@@ -5,7 +5,7 @@ import java.net.URI;
 public class CommonAddrActions {
   public static URI getUri (String reference) {
     URI uri = null;
-    //TODO Resolve problem in case uri.getScheme() == null??????
+
     try {
       uri = new URI(reference);
       if (uri.getScheme() == null) {

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="fatal">
+
+    <appenders>
+        <File name="AppInfo" fileName="log/log.log" append="false">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{40} - %msg%n"/>
+            <Filters>
+                <MarkerFilter marker="ApplicationInfo"/>
+            </Filters>
+        </File>
+
+        <Console name="Console">
+            <PatternLayout pattern="%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %msg%n" />
+        </Console>
+
+    </appenders>
+
+    <Loggers>
+        <!-- Log everything in hibernate -->
+        <Logger name="org.hibernate" level="info" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <!-- Log SQL statements -->
+        <Logger name="org.hibernate.SQL" level="info" additivity="false">
+            <AppenderRef ref="Hibernate"/>
+        </Logger>
+
+        <!-- Log JDBC bind parameters -->
+        <Logger name="org.hibernate.type.descriptor.sql" level="info" additivity="false">
+            <AppenderRef ref="Hibernate"/>
+        </Logger>
+
+        <!-- Log custom packages -->
+        <Logger name="com.boraji.tutorial.hibernate" level="info" additivity="false">
+            <AppenderRef ref="Hibernate"/>
+        </Logger>
+
+        <root level="trace">
+            <appender-ref ref="AppInfo" level="info"/>
+            <appender-ref ref="Hibernate" level="info"/>
+            <appender-ref ref="Console" level="info"/>
+        </root>
+    </Loggers>
+
+</configuration>

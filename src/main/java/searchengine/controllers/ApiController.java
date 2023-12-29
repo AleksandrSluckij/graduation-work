@@ -4,14 +4,13 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import searchengine.config.IndexingStatus;
 import searchengine.dto.ErrorResponseBody;
 import searchengine.dto.SuccessResponseBody;
 import searchengine.dto.statistics.StatisticsResponse;
-import searchengine.services.DatabaseConnService;
-import searchengine.services.IndexingService;
+import searchengine.services.GlobalIndexingService;
+import searchengine.services.SinglePageIndexingService;
 import searchengine.services.StatisticsService;
 
 @RestController
@@ -20,15 +19,16 @@ import searchengine.services.StatisticsService;
 public class ApiController {
 
     private final StatisticsService statisticsService;
-    private final IndexingService indexingService;
-    private final DatabaseConnService dataService;
+    private final GlobalIndexingService globalIndexingService;
+    private final SinglePageIndexingService singlePageIndexingService;
 
 
     @Autowired
-    public ApiController(StatisticsService statisticsService, IndexingService indexingService, DatabaseConnService dataService) {
+    public ApiController(StatisticsService statisticsService, GlobalIndexingService globalIndexingService,
+                         SinglePageIndexingService singlePageIndexingService) {
         this.statisticsService = statisticsService;
-        this.indexingService = indexingService;
-        this.dataService = dataService;
+        this.globalIndexingService = globalIndexingService;
+        this.singlePageIndexingService = singlePageIndexingService;
     }
 
     @GetMapping("/statistics")
@@ -40,22 +40,33 @@ public class ApiController {
     @GetMapping("/startIndexing")
     @ApiOperation("Command to start total indexing/reindexing process")
     public ResponseEntity startIndexing () {
-        String message = indexingService.startTotalIndexing(dataService);
-        if (message == null) {
-            return ResponseEntity.ok(new SuccessResponseBody());
+        if (IndexingStatus.isAlreadyIndexing()) {
+            return ResponseEntity.ok(new ErrorResponseBody("Индексация уже запущена"));
         } else {
-            return ResponseEntity.ok(new ErrorResponseBody(message));
+            globalIndexingService.startTotalIndexing();
+            return ResponseEntity.ok(new SuccessResponseBody());
         }
     }
 
     @GetMapping("/stopIndexing")
     @ApiOperation("Command to stop total indexing/reindexing process")
     public ResponseEntity stopIndexing () {
-        String message = indexingService.stopTotalIndexing();
-        if (message == null) {
-            return ResponseEntity.ok(new SuccessResponseBody());
+        if (!IndexingStatus.isAlreadyIndexing()) {
+            return ResponseEntity.ok(new ErrorResponseBody("Индексация не запущена"));
         } else {
-            return ResponseEntity.ok(new ErrorResponseBody(message));
+            globalIndexingService.stopTotalIndexing();
+            return ResponseEntity.ok(new SuccessResponseBody());
+        }
+    }
+
+    @PostMapping("/indexPage")
+    @ApiOperation("Command to index single page")
+    public ResponseEntity indexPage (@RequestParam("url") String pageAddr) {
+        if (IndexingStatus.isAlreadyIndexing()) {
+            return ResponseEntity.ok(new ErrorResponseBody("Индексация уже запущена"));
+        } else {
+            String error = singlePageIndexingService.indexSinglePage(pageAddr);
+            return error == null ? ResponseEntity.ok(new SuccessResponseBody()) : ResponseEntity.ok(new ErrorResponseBody(error));
         }
     }
 }

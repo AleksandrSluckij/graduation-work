@@ -1,27 +1,28 @@
 package searchengine.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import searchengine.model.PageRepository;
-import searchengine.model.SiteRepository;
+import searchengine.model.*;
 
 @Component
-public class DataBaseConnectionServiceImpl implements DatabaseConnService{
+public class DataBaseConnectionServiceImpl implements DataBaseConnectionService {
+
     private final SiteRepository siteRepository;
     private final PageRepository pageRepository;
+    private final LemmaRepository lemmaRepository;
+    private final IndexRepository indexRepository;
+    private final PreLemmaRepository preLemmaRepository;
 
     @Autowired
-    public DataBaseConnectionServiceImpl(SiteRepository siteRepository, PageRepository pageRepository) {
+    public DataBaseConnectionServiceImpl(SiteRepository siteRepository, PageRepository pageRepository,
+                                         LemmaRepository lemmaRepository, IndexRepository indexRepository,
+                                         PreLemmaRepository preLemmaRepository) {
         this.siteRepository = siteRepository;
         this.pageRepository = pageRepository;
+        this.lemmaRepository = lemmaRepository;
+        this.indexRepository = indexRepository;
+        this.preLemmaRepository = preLemmaRepository;
     }
-
-    @Value("${user-agent-name}")
-    String userAgent;
-
-    @Value("${referer-name}")
-    String referer;
 
     @Override
     public SiteRepository getSiteRepository() {
@@ -34,12 +35,18 @@ public class DataBaseConnectionServiceImpl implements DatabaseConnService{
     }
 
     @Override
-    public String getUserAgent() {
-        return userAgent;
+    public LemmaRepository getLemmaRepository() {
+        return lemmaRepository;
     }
 
     @Override
-    public String getReferer () {
-        return referer;
+    public IndexRepository getIndexRepository() {
+        return indexRepository;
     }
+
+    @Override
+    public PreLemmaRepository getPreLemmaRepository() {
+        return preLemmaRepository;
+    }
+
 }

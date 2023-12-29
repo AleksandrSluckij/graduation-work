@@ -12,23 +12,24 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
     hibernate:
       ddl-auto: update
-    show-sql: true
+      show-sql: true
 
 
 indexing-settings:
   sites:
-#    - url: https://www.lenta.ru
-#      name: Лента.ру
+#    - url: https://volochek.life
+#      name: Вышний Волочек портал города
     - url: https://nikoartgallery.com
       name: Галерея искусств Niko
-#    - url: https://www.skillbox.ru
-#      name: Skillbox
-#    - url: https://www.playback.ru
-#      name: PlayBack.Ru
+    - url: https://www.svetlovka.ru
+      name: ЦГМБ им. М.А.Светлова
+#    - url: https://dombulgakova.ru
+#      name: Булгаковский дом
     - url: https://www.lutherancathedral.ru
       name: Собор Петра и Павла
     - url: https://ipfran.ru
       name: Институт прикладной физики РАН
 
-user-agent-name: 67SearchBot
-referer-name: http://www.google.com
+connection-settings:
+  agent: 67SearchBot
+  referrer: http://www.google.com

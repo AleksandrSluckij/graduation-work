@@ -12,23 +12,22 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
-public class IndexingServiceImpl implements IndexingService{
+public class GlobalIndexingServiceImpl implements GlobalIndexingService {
 
     private final SitesList sitesList;
-    private Set<SingleSiteIndexingProcess> tasks;
-    private DatabaseConnService dataService;
+    private final Set<SingleSiteIndexingProcess> tasks;
+    private final DataBaseConnectionService dataService;
 
 
     @Autowired
-    public IndexingServiceImpl(SitesList sitesList, DatabaseConnService dataService) {
+    public GlobalIndexingServiceImpl(SitesList sitesList, DataBaseConnectionService dataService) {
         this.sitesList = sitesList;
         this.dataService = dataService;
         tasks = ConcurrentHashMap.newKeySet();
     }
 
     @Override
-    public String startTotalIndexing(DatabaseConnService dataService) {
-        if (IndexingStatus.isAlreadyIndexing()) return "Индексация уже запущена";
+    public void startTotalIndexing() {
         IndexingStatus.setIndexingTrue();
         for (Site site : sitesList.getSites()) {
             SingleSiteIndexingProcess task = new SingleSiteIndexingProcess(site, dataService);
@@ -36,7 +35,6 @@ public class IndexingServiceImpl implements IndexingService{
             task.start();
         }
         monitorThreadsAlive(tasks);
-        return null;
     }
 
     @Async
@@ -52,14 +50,12 @@ public class IndexingServiceImpl implements IndexingService{
     }
 
     @Override
-    public String stopTotalIndexing() {
-        if (!IndexingStatus.isAlreadyIndexing()) return "Индексация не запущена";
+    public void stopTotalIndexing() {
         for (SingleSiteIndexingProcess indexingProcess : tasks) {
             indexingProcess.interrupt();
         }
         tasks.clear();
         IndexingStatus.setIndexingFalse();
-        return null;
     }
 
 }
