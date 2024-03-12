@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Repository
 public interface SiteRepository extends JpaRepository<SiteEntity, Integer> {
@@ -19,4 +20,9 @@ public interface SiteRepository extends JpaRepository<SiteEntity, Integer> {
 
     @Query(value = "SELECT s.id FROM site s WHERE s.url = ?1", nativeQuery = true)
     Integer findSiteIdByUrl(String url);
+
+    SiteEntity findByUrl (String url);
+
+    @Query(value = "SELECT s.id FROM site s WHERE s.status = 'INDEXED'", nativeQuery = true)
+    List<Integer> findSiteIdsIndexed();
 }

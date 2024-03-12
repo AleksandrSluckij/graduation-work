@@ -17,14 +17,14 @@ spring:
 
 indexing-settings:
   sites:
-#    - url: https://volochek.life
-#      name: Вышний Волочек портал города
+    - url: http://www.playback.ru
+      name: Интернет-магазин PLAYBACK.RU
     - url: https://nikoartgallery.com
       name: Галерея искусств Niko
     - url: https://www.svetlovka.ru
       name: ЦГМБ им. М.А.Светлова
-#    - url: https://dombulgakova.ru
-#      name: Булгаковский дом
+    - url: https://dombulgakova.ru
+      name: Булгаковский дом
     - url: https://www.lutherancathedral.ru
       name: Собор Петра и Павла
     - url: https://ipfran.ru

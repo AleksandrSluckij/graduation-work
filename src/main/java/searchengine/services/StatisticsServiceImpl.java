@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import searchengine.config.IndexingStatus;
 import searchengine.dto.statistics.DetailedStatisticsItem;
 import searchengine.dto.statistics.StatisticsData;
-import searchengine.dto.statistics.StatisticsResponse;
+import searchengine.dto.statistics.StatisticsResponseBody;
 import searchengine.dto.statistics.TotalStatistics;
 import searchengine.model.LemmaRepository;
 import searchengine.model.PageRepository;
@@ -31,8 +31,8 @@ public class StatisticsServiceImpl implements StatisticsService {
     }
 
     @Override
-    public StatisticsResponse getStatistics() {
-        StatisticsResponse response = new StatisticsResponse();
+    public StatisticsResponseBody getStatistics() {
+        StatisticsResponseBody response = new StatisticsResponseBody();
         response.setResult(true);
         TotalStatistics total = new TotalStatistics();
         total.setIndexing(IndexingStatus.isAlreadyIndexing());

@@ -73,7 +73,7 @@ public class SingleSiteIndexingProcess extends Thread{
     }
 
     private void deleteExistingInfo() {
-        //TODO consider the need to return a value
+
         Integer siteId = dataService.getSiteRepository().findSiteIdByUrl(site.getUrl());
         if (siteId != null) {
             dataService.getLemmaRepository().deleteAllBySiteId(siteId);
@@ -94,8 +94,7 @@ public class SingleSiteIndexingProcess extends Thread{
             try {
                 dataService.getPageRepository().deleteAllBySiteIdEquals(siteId);
                 unsuccessful = false;
-            } catch (CannotAcquireLockException ex) {
-
+            } catch (CannotAcquireLockException ignored) {
             }
         }
     }

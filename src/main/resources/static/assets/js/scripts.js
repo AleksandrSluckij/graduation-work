@@ -1537,6 +1537,9 @@ var API = function(){
                     if ($this.next('.API-error').length) {
                         $this.next('.API-error').remove();
                     }
+                    // restore search results block
+                    $('.SearchResult').removeClass('SearchResult-footer_hide')
+                    //
                     var $searchResults = $('.SearchResult'),
                         $content = $searchResults.find('.SearchResult-content');
                     if (data.offset === 0) {
@@ -1547,12 +1550,16 @@ var API = function(){
                     result.data.forEach(function(page){
                         $content.append('<div class="SearchResult-block">' +
                             '<a href="' + page.site + page.uri +'" target="_blank" class="SearchResult-siteTitle">' +
-                                (!data.siteName ? page.siteName + ' - ': '') +
+                                (page.siteName + ' - ') +
+//                                (!data.siteName ? page.siteName + ' - ': '') +
                                 page.title +
                             '</a>' +
                             '<div class="SearchResult-description">' +
                                 page.snippet +
                             '</div>' +
+                            '<div class="SearchResult-description"> Релевантность: ' +
+                                page.relevance.toFixed(4) +
+                                '</div>' +
                         '</div>')
                     });
                     $(window).scrollTop(scroll);
@@ -1570,6 +1577,9 @@ var API = function(){
                     }
                     
                 } else {
+                    // hide previous search results!!!
+                    $('.SearchResult').addClass('SearchResult-footer_hide');
+                    //
                     if ($this.next('.API-error').length) {
                         $this.next('.API-error').text(result.error);
                     } else {

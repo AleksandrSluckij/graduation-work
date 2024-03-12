@@ -42,8 +42,7 @@ public class PageReadingService {
             response = connection.method(Connection.Method.GET).execute();
             responseCode = response.statusCode();
             pageContent = response.body();
-            String EMPTY_MESSAGE = "";
-            errorMessage = EMPTY_MESSAGE;
+            errorMessage = "";
         } catch (HttpStatusException ex) {
             responseCode = ex.getStatusCode();
             pageContent = EMPTY_CONTENT;

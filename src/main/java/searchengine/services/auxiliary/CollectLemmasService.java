@@ -72,22 +72,4 @@ public class CollectLemmasService {
         dataService.getIndexRepository().collectSingleSiteIndexes(siteId);
     }
 
-//            LOGGER.error(MARKER, "Lemmas counts not match!! Page: " + dataService.getSiteRepository().findById(siteId).get().getUrl()
-//                    + dataService.getPageRepository().findById(pageId).get().getPath());
-//            LOGGER.error(MARKER, "Page id: " + pageId);
-//            LOGGER.error(MARKER, "Lemmas on page count: " + lemmasMap.size());
-//            LOGGER.error(MARKER, ">>> " + String.join(", ", lemmasMap.keySet()));
-//            LOGGER.error(MARKER, " Lemmas in base count: " + lemmasInBaseNew.size());
-//            LOGGER.error(MARKER, "--- " + String.join(", ", lemmasInBaseNew.stream().map(LemmaEntity :: getLemma).toList()));
-//            LOGGER.error(MARKER, "Initial count of lemmas in base: " + lemmasInBaseInitial.size());
-//            LOGGER.error(MARKER, "=== " + String.join(", ", lemmasInBaseInitial.stream().map(LemmaEntity :: getLemma).toList()));
-//            LOGGER.error(MARKER, "The page is skipping!!!!");
-//        }
-//
-//        List<IndexEntity> indexes = new ArrayList<>();
-//        for (LemmaEntity lemmaInBase : lemmasInBaseNew) {
-//            indexes.add(new IndexEntity(lemmaInBase.getId(), pageId, lemmasMap.get(lemmaInBase.getLemma())));
-//        }
-//        dataService.getIndexRepository().saveAllAndFlush(indexes);
-//    }
 }

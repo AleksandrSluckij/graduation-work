@@ -11,7 +11,7 @@ import javax.persistence.*;
 @Entity
 @Table(name = "lemma")
 @NoArgsConstructor
-public class LemmaEntity {
+public class LemmaEntity implements Comparable<LemmaEntity>{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -26,5 +26,11 @@ public class LemmaEntity {
         this.frequency = frequency;
         this.lemma = lemma;
         this.siteId = siteId;
+    }
+
+
+    @Override
+    public int compareTo(LemmaEntity l) {
+        return (this.frequency - l.frequency);
     }
 }

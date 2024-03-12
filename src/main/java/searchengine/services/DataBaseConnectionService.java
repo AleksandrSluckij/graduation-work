@@ -8,9 +8,6 @@ public interface DataBaseConnectionService {
     LemmaRepository getLemmaRepository ();
     IndexRepository getIndexRepository ();
     PreLemmaRepository getPreLemmaRepository ();
+    PreResultRepository getPreResultRepository ();
     
-
-//    String getAgent();
-//
-//    String getReferrer();
 }

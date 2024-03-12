@@ -12,16 +12,18 @@ public class DataBaseConnectionServiceImpl implements DataBaseConnectionService 
     private final LemmaRepository lemmaRepository;
     private final IndexRepository indexRepository;
     private final PreLemmaRepository preLemmaRepository;
+    private final PreResultRepository preResultRepository;
 
     @Autowired
     public DataBaseConnectionServiceImpl(SiteRepository siteRepository, PageRepository pageRepository,
                                          LemmaRepository lemmaRepository, IndexRepository indexRepository,
-                                         PreLemmaRepository preLemmaRepository) {
+                                         PreLemmaRepository preLemmaRepository, PreResultRepository preResultRepository) {
         this.siteRepository = siteRepository;
         this.pageRepository = pageRepository;
         this.lemmaRepository = lemmaRepository;
         this.indexRepository = indexRepository;
         this.preLemmaRepository = preLemmaRepository;
+        this.preResultRepository = preResultRepository;
     }
 
     @Override
@@ -49,4 +51,8 @@ public class DataBaseConnectionServiceImpl implements DataBaseConnectionService 
         return preLemmaRepository;
     }
 
+    @Override
+    public PreResultRepository getPreResultRepository() {
+        return preResultRepository;
+    }
 }

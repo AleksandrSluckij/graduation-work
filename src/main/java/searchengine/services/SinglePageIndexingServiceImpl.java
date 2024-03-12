@@ -47,7 +47,7 @@ public class SinglePageIndexingServiceImpl implements SinglePageIndexingService 
 
         if (site == null) {
             Site siteInConfig = sitesList.getSites().stream()
-                    .filter(s -> {return s.getUrl().equals(CommonAddrActions.extractSiteHost(pageAddr));})
+                    .filter(s -> s.getUrl().equals(CommonAddrActions.extractSiteHost(pageAddr)))
                     .findFirst().orElse(null);
             if (siteInConfig == null) {
                 return "Ошибка определения сайта " + CommonAddrActions.extractSiteHost(pageAddr);
@@ -96,11 +96,6 @@ public class SinglePageIndexingServiceImpl implements SinglePageIndexingService 
         List<Integer> pageLemmasIds = pageIndexes.stream().map(IndexEntity::getLemmaId).toList();
 
         dataService.getLemmaRepository().decreaseLemmaFrequencyById(pageLemmasIds);
-//        List<LemmaEntity> pageLemmas = dataService.getLemmaRepository().findAllById(pageLemmasIds);
-//        for (LemmaEntity lemma : pageLemmas) {
-//            lemma.setFrequency(lemma.getFrequency() - 1);
-//        }
-//        dataService.getLemmaRepository().saveAllAndFlush(pageLemmas);
 
         dataService.getLemmaRepository().deleteEmptyLemmas();
     }
