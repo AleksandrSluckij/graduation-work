@@ -17,19 +17,27 @@ spring:
 
 indexing-settings:
   sites:
-    - url: http://www.playback.ru
-      name: Интернет-магазин PLAYBACK.RU
+#    - url: http://www.playback.ru
+#      name: Интернет-магазин PLAYBACK.RU
     - url: https://nikoartgallery.com
       name: Галерея искусств Niko
     - url: https://www.svetlovka.ru
       name: ЦГМБ им. М.А.Светлова
-    - url: https://dombulgakova.ru
-      name: Булгаковский дом
-    - url: https://www.lutherancathedral.ru
-      name: Собор Петра и Павла
+#    - url: https://dombulgakova.ru
+#      name: Булгаковский дом
+#    - url: https://www.lutherancathedral.ru
+#      name: Собор Петра и Павла
     - url: https://ipfran.ru
       name: Институт прикладной физики РАН
 
 connection-settings:
   agent: 67SearchBot
   referrer: http://www.google.com
+
+logging:
+  pattern:
+    console: '%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %msg%n'
+    file: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{40} - %msg%n'
+  file:
+    name: log/log.log
+    clean-history-on-start: true

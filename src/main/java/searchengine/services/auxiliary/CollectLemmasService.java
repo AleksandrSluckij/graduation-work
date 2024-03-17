@@ -1,5 +1,6 @@
 package searchengine.services.auxiliary;
 
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -10,10 +11,8 @@ import searchengine.services.morphology.MorphService;
 
 import java.util.*;
 
-import static searchengine.config.LoggingConfig.LOGGER;
-import static searchengine.config.LoggingConfig.MARKER;
-
 @Component
+@Slf4j
 public class CollectLemmasService {
     private static DataBaseConnectionService dataService;
 
@@ -47,7 +46,7 @@ public class CollectLemmasService {
         if (lemmaNamesFound == null) {
             String fullAddr = dataService.getSiteRepository().findById(siteId).get().getUrl().concat(
                                 dataService.getPageRepository().findById(pageId).get().getPath());
-            LOGGER.error(MARKER, "При индексации страницы " + fullAddr + " не найдено ни одной леммы!!!");
+            log.error("При индексации страницы " + fullAddr + " не найдено ни одной леммы!!!");
             return;
         }
         List<String> lemmaNamesNew = new ArrayList<>(List.copyOf(lemmaNamesFound));

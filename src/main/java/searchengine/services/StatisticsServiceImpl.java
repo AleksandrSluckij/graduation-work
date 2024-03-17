@@ -7,10 +7,10 @@ import searchengine.dto.statistics.DetailedStatisticsItem;
 import searchengine.dto.statistics.StatisticsData;
 import searchengine.dto.statistics.StatisticsResponseBody;
 import searchengine.dto.statistics.TotalStatistics;
-import searchengine.model.LemmaRepository;
-import searchengine.model.PageRepository;
+import searchengine.model.repositories.LemmaRepository;
+import searchengine.model.repositories.PageRepository;
 import searchengine.model.SiteEntity;
-import searchengine.model.SiteRepository;
+import searchengine.model.repositories.SiteRepository;
 
 import java.time.ZoneOffset;
 import java.util.ArrayList;

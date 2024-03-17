@@ -35,13 +35,16 @@ public class CommonAddrActions {
   }
 
   public static boolean isGoodAddr (String addrString, String root) {
-    boolean result = true;
-    result = result && (!addrString.isEmpty());
-    result = result && (addrString.startsWith("/") || addrString.startsWith(root));     // this is a subdomain of same domain
+    boolean result = addrString.startsWith("/") || addrString.startsWith(root);         // link not empty and this is a subdomain of same domain
     result = result && (!addrString.contains("#"));                                     // this is an anchor
     result = result && (!((addrString.lastIndexOf(".") > addrString.lastIndexOf("/"))
             && !(addrString.endsWith("php") || addrString.endsWith("html") || addrString.endsWith("aspx"))));          // this is a file, but not page
+
     return result;
+
+    // and so it is possible
+    // return (addrString.startsWith("/") || addrString.startsWith(root) && (!addrString.contains("#")) && (!((addrString.lastIndexOf(".") > addrString.lastIndexOf("/"))
+    //        && !(addrString.endsWith("php") || addrString.endsWith("html") || addrString.endsWith("aspx"))));
   }
 
   public static String addrNormalization (String addrString, String root) {

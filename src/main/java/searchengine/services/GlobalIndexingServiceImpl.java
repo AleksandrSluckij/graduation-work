@@ -27,8 +27,10 @@ public class GlobalIndexingServiceImpl implements GlobalIndexingService {
     }
 
     @Override
+    @Async
     public void startTotalIndexing() {
         IndexingStatus.setIndexingTrue();
+        dataService.getPreLemmaRepository().initPreLemmaTable();
         for (Site site : sitesList.getSites()) {
             SingleSiteIndexingProcess task = new SingleSiteIndexingProcess(site, dataService);
             tasks.add(task);
@@ -37,14 +39,9 @@ public class GlobalIndexingServiceImpl implements GlobalIndexingService {
         monitorThreadsAlive(tasks);
     }
 
-    @Async
     private void monitorThreadsAlive(Set<SingleSiteIndexingProcess> tasks) {
         while (!tasks.isEmpty()) {
-            for (SingleSiteIndexingProcess indexingProcess : tasks) {
-                if (indexingProcess.getState() == Thread.State.TERMINATED) {
-                    tasks.remove(indexingProcess);
-                }
-            }
+            tasks.removeIf(indexingProcess -> indexingProcess.getState() == Thread.State.TERMINATED);
         }
         IndexingStatus.setIndexingFalse();
     }

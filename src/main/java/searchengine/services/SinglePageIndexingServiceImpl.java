@@ -78,7 +78,6 @@ public class SinglePageIndexingServiceImpl implements SinglePageIndexingService 
         return null;
     }
 
-    @Transactional
     private void removeExistingData(int siteId, String pagePath) {
 
         PageEntity page = dataService.getPageRepository().findPageByPathAndSiteId(pagePath, siteId);

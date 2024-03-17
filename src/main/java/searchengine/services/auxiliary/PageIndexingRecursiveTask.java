@@ -48,11 +48,11 @@ public class PageIndexingRecursiveTask extends RecursiveAction {
         page.setPath(pagePath);
         page.setContent(readingResult.getContent());
         page.setCode(readingResult.getCode());
-        page.setSiteId(parentProcess.getSiteId());
+        page.setSiteId(parentProcess.getSiteRecord().getId());
         page = dataService.getPageRepository().saveAndFlush(page);
 
         if (page.getCode() == HttpStatus.OK.value()) {
-            CollectLemmasService.processLemmasOnPageCollection(page.getContent(), parentProcess.getSiteId(), page.getId());
+            CollectLemmasService.processLemmasOnPageCollection(page.getContent(), parentProcess.getSiteRecord().getId(), page.getId());
             subLinks = Jsoup.parse(page.getContent()).getAllElements().eachAttr("href");
         }
         if (!subLinks.isEmpty()) {

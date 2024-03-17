@@ -2,7 +2,7 @@ package searchengine.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import searchengine.model.*;
+import searchengine.model.repositories.*;
 
 @Component
 public class DataBaseConnectionServiceImpl implements DataBaseConnectionService {

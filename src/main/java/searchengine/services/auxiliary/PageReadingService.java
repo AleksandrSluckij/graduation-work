@@ -1,5 +1,6 @@
 package searchengine.services.auxiliary;
 
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
@@ -12,11 +13,10 @@ import searchengine.dto.ResultOfPageReading;
 import java.io.IOException;
 import java.net.UnknownHostException;
 
-import static searchengine.config.LoggingConfig.LOGGER;
-import static searchengine.config.LoggingConfig.MARKER;
-
 @Component
+@Slf4j
 public class PageReadingService {
+    private final static String EMPTY_CONTENT = "N/A";
     private static ConnectionSettings connectionSettings;
 
     @Autowired
@@ -29,12 +29,11 @@ public class PageReadingService {
         int responseCode;
         String pageContent;
         String errorMessage;
-        String EMPTY_CONTENT = "N/A";
 
         try {
             Thread.sleep(500);
         } catch (InterruptedException ex) {
-            LOGGER.info(MARKER, "Поток завершился нештатно при ожидании ответа от страницы: " + fullAddr);
+            log.info("Поток завершился нештатно при ожидании ответа от страницы: " + fullAddr);
         }
 
         try {
@@ -46,12 +45,12 @@ public class PageReadingService {
         } catch (HttpStatusException ex) {
             responseCode = ex.getStatusCode();
             pageContent = EMPTY_CONTENT;
-            LOGGER.info(MARKER, "Не удалось получить содержимое страницы " + fullAddr + ", код ошибки: " + responseCode + ", " + ex.getLocalizedMessage());
+            log.info("Не удалось получить содержимое страницы " + fullAddr + ", код ошибки: " + responseCode + ", " + ex.getLocalizedMessage());
             errorMessage = String.format("Не удалось получить содержимое страницы %s, код ошибки %s, %s}", fullAddr, responseCode, ex.getLocalizedMessage());
         } catch (UnknownHostException ex) {
             responseCode = HttpStatus.NOT_FOUND.value();
             pageContent = EMPTY_CONTENT;
-            LOGGER.info(MARKER, "IP-адрес хоста не может быть определен при получении содержимого страницы: " + fullAddr);
+            log.info("IP-адрес хоста не может быть определен при получении содержимого страницы: " + fullAddr);
             errorMessage = String.format("IP-адрес хоста не может быть определен при получении содержимого страницы %s", fullAddr);
         } catch (IOException ex) {
             errorMessage = ex.getMessage();
@@ -62,7 +61,7 @@ public class PageReadingService {
             } else {
                 responseCode = HttpStatus.INTERNAL_SERVER_ERROR.value();
             }
-            LOGGER.info(MARKER, "I/O Exception occurred!!!:>> Page: " + fullAddr + ", error: " + ex.getLocalizedMessage() + ", code: " + responseCode);
+            log.info("I/O Exception occurred!!!:>> Page: " + fullAddr + ", error: " + ex.getLocalizedMessage() + ", code: " + responseCode);
         }
         return new ResultOfPageReading(pageContent, responseCode, errorMessage);
     }

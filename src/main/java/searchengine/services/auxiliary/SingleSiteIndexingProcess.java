@@ -1,6 +1,7 @@
 package searchengine.services.auxiliary;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.CannotAcquireLockException;
 import searchengine.config.Site;
 import searchengine.model.SiteEntity;
@@ -12,17 +13,13 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
 
-import static searchengine.config.LoggingConfig.LOGGER;
-import static searchengine.config.LoggingConfig.MARKER;
-
-
 @Getter
+@Slf4j
 public class SingleSiteIndexingProcess extends Thread{
     private final DataBaseConnectionService dataService;
     private final Site site;
     private SiteEntity siteRecord;
     final Set<String> foundPages = ConcurrentHashMap.newKeySet();
-    private int siteId;
 
     public SingleSiteIndexingProcess(Site site, DataBaseConnectionService dataService) {
         this.site = site;
@@ -43,7 +40,6 @@ public class SingleSiteIndexingProcess extends Thread{
         siteRecord.setStatus(SiteStatus.INDEXING);
         siteRecord.setStatusTime(LocalDateTime.now());
         siteRecord = dataService.getSiteRepository().saveAndFlush(siteRecord);
-        siteId = siteRecord.getId();
 
         foundPages.add("/");
         new ForkJoinPool().invoke(new PageIndexingRecursiveTask( "/", this));
@@ -51,15 +47,15 @@ public class SingleSiteIndexingProcess extends Thread{
         // TODO For debugging, remove later
         long end1 = System.currentTimeMillis();
 
-        CollectLemmasService.collectSingleSiteLemmas(siteId);
+        CollectLemmasService.collectSingleSiteLemmas(siteRecord.getId());
 
 
         // TODO For debugging, remove later
         long end2 = System.currentTimeMillis();
-        LOGGER.info(MARKER, "Site " + siteRecord.getUrl() + " indexed in " + ((System.currentTimeMillis() - start) / 1000) + " sec");
-        LOGGER.info(MARKER, "Pages found in " + ((end1 - start) / 1000) + " sec");
-        LOGGER.info(MARKER, "Lemmas indexed in " + ((end2 - end1) / 1000) + " sec");
-        LOGGER.info(MARKER, "Unique pages: " + foundPages.size());
+        log.info("Site " + siteRecord.getUrl() + " indexed in " + ((System.currentTimeMillis() - start) / 1000) + " sec");
+        log.info("Pages found in " + ((end1 - start) / 1000) + " sec");
+        log.info("Lemmas indexed in " + ((end2 - end1) / 1000) + " sec");
+        log.info("Unique pages: " + foundPages.size());
     }
 
     @Override

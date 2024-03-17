@@ -1,4 +1,4 @@
-package searchengine.model;
+package searchengine.model.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import searchengine.dto.auxdto.SitePagesCounts;
+import searchengine.model.PageEntity;
 
 import java.util.List;
 
@@ -24,5 +25,5 @@ public interface PageRepository extends JpaRepository<PageEntity, Integer> {
     int countBySiteId(Integer id);
 
     @Query(value = "SELECT p.site_id AS site_id, COUNT(*) AS pages_count FROM pages p GROUP BY p.site_id", nativeQuery = true)
-    public List<SitePagesCounts> getPageCountsOnSites ();
+    List<SitePagesCounts> getPageCountsOnSites ();
 }

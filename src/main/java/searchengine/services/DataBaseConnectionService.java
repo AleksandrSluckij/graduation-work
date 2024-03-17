@@ -1,6 +1,6 @@
 package searchengine.services;
 
-import searchengine.model.*;
+import searchengine.model.repositories.*;
 
 public interface DataBaseConnectionService {
     SiteRepository getSiteRepository ();
