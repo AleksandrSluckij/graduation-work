@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import searchengine.config.IndexingStatus;
 import searchengine.config.Site;
 import searchengine.config.SitesList;
+import searchengine.model.repositories.*;
 import searchengine.services.auxiliary.SingleSiteIndexingProcess;
 
 import java.util.Set;
@@ -16,13 +17,22 @@ public class GlobalIndexingServiceImpl implements GlobalIndexingService {
 
     private final SitesList sitesList;
     private final Set<SingleSiteIndexingProcess> tasks;
-    private final DataBaseConnectionService dataService;
 
+    private final PreLemmaRepository preLemmaRepository;
+    private final SiteRepository siteRepository;
+    private final LemmaRepository lemmaRepository;
+    private final IndexRepository indexRepository;
+    private final PageRepository pageRepository;
 
     @Autowired
-    public GlobalIndexingServiceImpl(SitesList sitesList, DataBaseConnectionService dataService) {
+    public GlobalIndexingServiceImpl(SitesList sitesList, PreLemmaRepository preLemmaRepository, SiteRepository siteRepository,
+                                     LemmaRepository lemmaRepository, IndexRepository indexRepository, PageRepository pageRepository) {
         this.sitesList = sitesList;
-        this.dataService = dataService;
+        this.preLemmaRepository = preLemmaRepository;
+        this.siteRepository = siteRepository;
+        this.lemmaRepository = lemmaRepository;
+        this.indexRepository = indexRepository;
+        this.pageRepository = pageRepository;
         tasks = ConcurrentHashMap.newKeySet();
     }
 
@@ -30,9 +40,9 @@ public class GlobalIndexingServiceImpl implements GlobalIndexingService {
     @Async
     public void startTotalIndexing() {
         IndexingStatus.setIndexingTrue();
-        dataService.getPreLemmaRepository().initPreLemmaTable();
+        preLemmaRepository.initPreLemmaTable();
         for (Site site : sitesList.getSites()) {
-            SingleSiteIndexingProcess task = new SingleSiteIndexingProcess(site, dataService);
+            SingleSiteIndexingProcess task = new SingleSiteIndexingProcess(site, siteRepository, lemmaRepository, indexRepository, pageRepository, preLemmaRepository);
             tasks.add(task);
             task.start();
         }

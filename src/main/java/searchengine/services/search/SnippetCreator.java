@@ -12,7 +12,7 @@ public class SnippetCreator {
   private static final int SNIPPET_FRAG_HALF_SIZE = 50;
   private static final String DOTS = "...";
   private static final String ABSENT_STEM = "...>>NOT FOUND<<...";
-  private static final String NO_LETTERS = "[^а-я^А-Я^ ]";
+  private static final String NO_LETTERS = "[^а-яё^А-ЯЁ^ ]";
 
 
   public static String getExactlySnippet (String text, String query) {
@@ -59,7 +59,7 @@ public class SnippetCreator {
 
   public static String getApproxSnippet(String text, String query) {
     String result = "";
-    int prevPosition = 0;
+    int prevPosition = -1;   // Изначально должно быть -1!!!!!!
     List<String> queryStems = getQueryStems(query);
     Map<String, Integer> queryStemsMap = new HashMap<>();
     String textInLowerCase = text.toLowerCase();
@@ -82,35 +82,32 @@ public class SnippetCreator {
 
   private static String getSnippetFragment(String text, Entry<String, Integer> stemEntry, int prevPosition,
       boolean lastStem) {
-    int leftPos;
-    int rightPos;
+    int startFragmentPosition;
+    int endFragmentPosition;
     String item = getWholeWord(text, stemEntry);
-    int start = stemEntry.getValue();
-    int end = start + item.length();
+    int startStemPosition = stemEntry.getValue();
+    int endStemPosition = startStemPosition + item.length();
     int textLength = text.length();
-    if (start > -1) {
-      if (prevPosition == -1) {
-        leftPos = start > SNIPPET_FRAG_HALF_SIZE ? start - SNIPPET_FRAG_HALF_SIZE : 0;
-      } else {
-        leftPos = start > prevPosition + SNIPPET_FRAG_HALF_SIZE ? start - SNIPPET_FRAG_HALF_SIZE : prevPosition;
-      }
-      if (lastStem) {
-        rightPos = end > textLength - SNIPPET_FRAG_HALF_SIZE ? textLength - 1 : end + SNIPPET_FRAG_HALF_SIZE;
-      } else {
-        rightPos = end;
-      }
-      String part = text.substring(leftPos, rightPos);
-      if (lastStem && (rightPos != textLength - 1)) {
-        part = trimRightTail(trimLeftTail(part, leftPos), rightPos, textLength);
-      } else {
-        part = trimLeftTail(part, leftPos);
-      }
-      start = part.indexOf(item);
-      end = start + item.length();
-      return part.substring(0, start) + "<b>" + item + "</b>" + part.substring(end);
-    } else {
-      return ABSENT_STEM;
+
+    startFragmentPosition = prevPosition == -1 ?
+          startStemPosition > SNIPPET_FRAG_HALF_SIZE ? startStemPosition - SNIPPET_FRAG_HALF_SIZE : 0
+          :
+          startStemPosition > prevPosition + SNIPPET_FRAG_HALF_SIZE ? startStemPosition - SNIPPET_FRAG_HALF_SIZE : prevPosition;
+
+    endFragmentPosition = lastStem ?
+            endStemPosition > textLength - SNIPPET_FRAG_HALF_SIZE ? textLength - 1 : endStemPosition + SNIPPET_FRAG_HALF_SIZE
+            :
+            endStemPosition;
+
+    String fragment = text.substring(startFragmentPosition, endFragmentPosition);
+    fragment = trimLeftTail(fragment, startFragmentPosition);
+
+    if (lastStem && (endFragmentPosition != textLength - 1)) {
+      fragment = trimRightTail(fragment, endFragmentPosition, textLength);
     }
+    startStemPosition = fragment.indexOf(item);
+    endStemPosition = startStemPosition + item.length();
+    return fragment.substring(0, startStemPosition) + "<b>" + item + "</b>" + fragment.substring(endStemPosition);
   }
 
   private static String getWholeWord(String text, Entry<String, Integer> stemEntry) {

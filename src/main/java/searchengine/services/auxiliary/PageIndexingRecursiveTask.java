@@ -6,7 +6,6 @@ import searchengine.config.IndexingStatus;
 import searchengine.dto.ResultOfPageReading;
 import searchengine.model.PageEntity;
 import searchengine.model.SiteStatus;
-import searchengine.services.DataBaseConnectionService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,23 +18,21 @@ import static searchengine.services.auxiliary.CommonAddrActions.isGoodAddr;
 public class PageIndexingRecursiveTask extends RecursiveAction {
 
     private final String pagePath;
-    private final DataBaseConnectionService dataService;
+    private final String siteUrl;
     SingleSiteIndexingProcess parentProcess;
 
     public PageIndexingRecursiveTask(String path, SingleSiteIndexingProcess parentProcess) {
         this.pagePath = path;
-        this.dataService = parentProcess.getDataService();
         this.parentProcess = parentProcess;
+        this.siteUrl = parentProcess.getSiteRecord().getUrl();
     }
 
     @Override
     protected void compute() {
         if (!IndexingStatus.isAlreadyIndexing()) return;
-        List<String> subLinks = new ArrayList<>();
-        List<PageIndexingRecursiveTask> tasks = new ArrayList<>();
 
-        String siteUrl = parentProcess.getSiteRecord().getUrl();
         parentProcess.updateSiteStatus(SiteStatus.INDEXING, "");
+
         ResultOfPageReading readingResult = PageReadingService.readPage(siteUrl.concat(pagePath));
 
         if (readingResult.getCode() != HttpStatus.OK.value() && pagePath.equals("/")) {
@@ -44,20 +41,14 @@ public class PageIndexingRecursiveTask extends RecursiveAction {
             return;
         }
 
-        PageEntity page = new PageEntity();
-        page.setPath(pagePath);
-        page.setContent(readingResult.getContent());
-        page.setCode(readingResult.getCode());
-        page.setSiteId(parentProcess.getSiteRecord().getId());
-        page = dataService.getPageRepository().saveAndFlush(page);
+        PageEntity page = parentProcess.getPageRepository().saveAndFlush(new PageEntity(pagePath, readingResult.getContent(), readingResult.getCode(),
+                parentProcess.getSiteRecord().getId()));
 
         if (page.getCode() == HttpStatus.OK.value()) {
-            CollectLemmasService.processLemmasOnPageCollection(page.getContent(), parentProcess.getSiteRecord().getId(), page.getId());
-            subLinks = Jsoup.parse(page.getContent()).getAllElements().eachAttr("href");
-        }
-        if (!subLinks.isEmpty()) {
-            subLinks = subLinks.stream().filter(s -> isGoodAddr(s, siteUrl)).map(s -> addrNormalization(s, siteUrl)).distinct().collect(Collectors.toList());
+            CollectLemmasService.extractLemmasFromPage(page, parentProcess.getPreLemmaRepository());
+            List<String> subLinks = getSublinksList(page.getContent());
             if (!subLinks.isEmpty()) {
+                List<PageIndexingRecursiveTask> tasks = new ArrayList<>();
                 for (String link : subLinks) {
                     if (isLinkNotInBase(link)) {
                         PageIndexingRecursiveTask task = new PageIndexingRecursiveTask(link, parentProcess);
@@ -70,8 +61,15 @@ public class PageIndexingRecursiveTask extends RecursiveAction {
                 }
             }
         }
+
         parentProcess.updateSiteStatus(SiteStatus.INDEXED, "");
 
+    }
+
+    private List<String> getSublinksList(String pageContent) {
+        List<String> linksOnPage = Jsoup.parse(pageContent).getAllElements().eachAttr("href");
+        return linksOnPage.stream()
+                .filter(s -> isGoodAddr(s, siteUrl)).map(s -> addrNormalization(s, siteUrl)).distinct().collect(Collectors.toList());
     }
 
 

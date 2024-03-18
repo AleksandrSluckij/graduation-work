@@ -2,12 +2,12 @@ package searchengine.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import searchengine.config.IndexingStatus;
 import searchengine.config.Site;
 import searchengine.config.SitesList;
 import searchengine.dto.ResultOfPageReading;
 import searchengine.model.*;
+import searchengine.model.repositories.*;
 import searchengine.services.auxiliary.CollectLemmasService;
 import searchengine.services.auxiliary.CommonAddrActions;
 import searchengine.services.auxiliary.PageReadingService;
@@ -19,12 +19,24 @@ import java.util.List;
 public class SinglePageIndexingServiceImpl implements SinglePageIndexingService {
 
     private final SitesList sitesList;
-    private final DataBaseConnectionService dataService;
+
+    private final PreLemmaRepository preLemmaRepository;
+    private final SiteRepository siteRepository;
+    private final PageRepository pageRepository;
+    private final LemmaRepository lemmaRepository;
+    private final IndexRepository indexRepository;
+
+
 
     @Autowired
-    public SinglePageIndexingServiceImpl(SitesList sitesList, DataBaseConnectionService dataService) {
+    public SinglePageIndexingServiceImpl(SitesList sitesList, PreLemmaRepository preLemmaRepository, SiteRepository siteRepository,
+                                         PageRepository pageRepository, LemmaRepository lemmaRepository, IndexRepository indexRepository) {
         this.sitesList = sitesList;
-        this.dataService = dataService;
+        this.preLemmaRepository = preLemmaRepository;
+        this.siteRepository = siteRepository;
+        this.pageRepository = pageRepository;
+        this.lemmaRepository = lemmaRepository;
+        this.indexRepository = indexRepository;
     }
 
     @Override
@@ -43,7 +55,7 @@ public class SinglePageIndexingServiceImpl implements SinglePageIndexingService 
         page.setPath(CommonAddrActions.extractPagePath(pageAddr));
         page.setContent(readingResult.getContent());
         page.setCode(readingResult.getCode());
-        SiteEntity site = dataService.getSiteRepository().findByUrlEquals(CommonAddrActions.extractSiteHost(pageAddr));
+        SiteEntity site = siteRepository.findByUrlEquals(CommonAddrActions.extractSiteHost(pageAddr));
 
         if (site == null) {
             Site siteInConfig = sitesList.getSites().stream()
@@ -59,44 +71,44 @@ public class SinglePageIndexingServiceImpl implements SinglePageIndexingService 
             site.setStatus(SiteStatus.FAILED);
             site.setLastError("Never indexed");
             site.setStatusTime(LocalDateTime.now());
-            site = dataService.getSiteRepository().saveAndFlush(site);
+            site = siteRepository.saveAndFlush(site);
         }
 
         page.setSiteId(site.getId());
 
         removeExistingData(site.getId(), page.getPath());
 
-        page = dataService.getPageRepository().saveAndFlush(page);
+        page = pageRepository.saveAndFlush(page);
 
         IndexingStatus.setIndexingTrue();
-        dataService.getSiteRepository().updateSiteStatus(SiteStatus.INDEXING.toString(), site.getUrl(), "", LocalDateTime.now());
-        CollectLemmasService.initPreLemmaTable();
-        CollectLemmasService.processLemmasOnPageCollection(page.getContent(), site.getId(), page.getId());
-        CollectLemmasService.collectSinglePageLemmas(site.getId(), page.getId());
+        siteRepository.updateSiteStatus(SiteStatus.INDEXING.toString(), site.getUrl(), "", LocalDateTime.now());
+        preLemmaRepository.initPreLemmaTable();
+        CollectLemmasService.extractLemmasFromPage(page, preLemmaRepository);
+        CollectLemmasService.collectSinglePageLemmas(site.getId(), page.getId(), preLemmaRepository, siteRepository, pageRepository, lemmaRepository, indexRepository);
         IndexingStatus.setIndexingFalse();
-        dataService.getSiteRepository().updateSiteStatus(SiteStatus.INDEXED.toString(), site.getUrl(), "", LocalDateTime.now());
+        siteRepository.updateSiteStatus(SiteStatus.INDEXED.toString(), site.getUrl(), "", LocalDateTime.now());
         return null;
     }
 
     private void removeExistingData(int siteId, String pagePath) {
 
-        PageEntity page = dataService.getPageRepository().findPageByPathAndSiteId(pagePath, siteId);
+        PageEntity page = pageRepository.findPageByPathAndSiteId(pagePath, siteId);
         if (page == null) {
             return;
         }
-        dataService.getPageRepository().delete(page);
+        pageRepository.delete(page);
 
-        List<IndexEntity> pageIndexes = dataService.getIndexRepository().findAllByPageIdEquals(page.getId());
+        List<IndexEntity> pageIndexes = indexRepository.findAllByPageIdEquals(page.getId());
         if (pageIndexes.isEmpty()) {
             return;
         }
-        dataService.getIndexRepository().deleteAll(pageIndexes);
+        indexRepository.deleteAll(pageIndexes);
 
         List<Integer> pageLemmasIds = pageIndexes.stream().map(IndexEntity::getLemmaId).toList();
 
-        dataService.getLemmaRepository().decreaseLemmaFrequencyById(pageLemmasIds);
+        lemmaRepository.decreaseLemmaFrequencyById(pageLemmasIds);
 
-        dataService.getLemmaRepository().deleteEmptyLemmas();
+        lemmaRepository.deleteEmptyLemmas();
     }
 
     private boolean pageAddrNotCorrect(String pageAddr) {

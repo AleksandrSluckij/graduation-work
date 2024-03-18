@@ -1,12 +1,14 @@
 package searchengine.model;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
 
 @Getter
 @Setter
+@NoArgsConstructor
 @Entity
 @Table(name = "page")
 public class PageEntity {
@@ -21,4 +23,11 @@ public class PageEntity {
     private Integer code;
     @Column(columnDefinition = "MEDIUMTEXT", nullable = false)
     private String content;
+
+    public PageEntity(String path, String content, int code, Integer siteId) {
+        this.siteId = siteId;
+        this.path = path;
+        this.code = code;
+        this.content = content;
+    }
 }

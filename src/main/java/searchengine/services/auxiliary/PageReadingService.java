@@ -4,10 +4,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import searchengine.config.ConnectionSettings;
 import searchengine.dto.ResultOfPageReading;
 
 import java.io.IOException;
@@ -17,12 +16,19 @@ import java.net.UnknownHostException;
 @Slf4j
 public class PageReadingService {
     private final static String EMPTY_CONTENT = "N/A";
-    private static ConnectionSettings connectionSettings;
 
-    @Autowired
-    public PageReadingService(ConnectionSettings connectionSettings) {
-        PageReadingService.connectionSettings = connectionSettings;
+    private static String agent;
+    private static String referrer;
+
+    @Value("${connection-settings.agent}")
+    public void setAgent (String agent) {
+        PageReadingService.agent = agent;
     }
+    @Value("${connection-settings.referrer}")
+    public void setReferrer (String referrer) {
+        PageReadingService.referrer = referrer;
+    }
+
 
     public static ResultOfPageReading readPage(String fullAddr) {
         Connection.Response response;
@@ -37,7 +43,7 @@ public class PageReadingService {
         }
 
         try {
-            Connection connection = Jsoup.connect(fullAddr).maxBodySize(0).userAgent(connectionSettings.getAgent()).referrer(connectionSettings.getReferrer());
+            Connection connection = Jsoup.connect(fullAddr).maxBodySize(0).userAgent(agent).referrer(referrer);
             response = connection.method(Connection.Method.GET).execute();
             responseCode = response.statusCode();
             pageContent = response.body();

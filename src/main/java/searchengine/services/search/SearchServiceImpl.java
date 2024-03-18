@@ -11,14 +11,19 @@ import searchengine.model.LemmaEntity;
 import searchengine.model.PreResultEntity;
 import searchengine.model.SiteEntity;
 import searchengine.model.SiteStatus;
-import searchengine.services.DataBaseConnectionService;
+import searchengine.model.repositories.*;
 import searchengine.services.morphology.MorphService;
 
 import java.util.*;
 
 @Service
 public class SearchServiceImpl implements SearchService{
-    private final DataBaseConnectionService dataService;
+
+    private final PreResultRepository preResultRepository;
+    private final LemmaRepository lemmaRepository;
+    private final PageRepository pageRepository;
+    private final IndexRepository indexRepository;
+    private final SiteRepository siteRepository;
 
     private Set<String> queryLemmas;
     private String query;
@@ -28,8 +33,13 @@ public class SearchServiceImpl implements SearchService{
 
 
     @Autowired
-    public SearchServiceImpl(DataBaseConnectionService dataService) {
-        this.dataService = dataService;
+    public SearchServiceImpl(PreResultRepository preResultRepository, LemmaRepository lemmaRepository, PageRepository pageRepository,
+                             IndexRepository indexRepository, SiteRepository siteRepository) {
+        this.preResultRepository = preResultRepository;
+        this.lemmaRepository = lemmaRepository;
+        this.pageRepository = pageRepository;
+        this.indexRepository = indexRepository;
+        this.siteRepository = siteRepository;
     }
 
 
@@ -51,8 +61,8 @@ public class SearchServiceImpl implements SearchService{
             error = createSearchPreResultTable(parameters);
         }
 
-        maxRelevanceFound = (double) dataService.getPreResultRepository().findMaxRelevance().orElse(0);
-        resultsCount = dataService.getPreResultRepository().getCount();
+        maxRelevanceFound = (double) preResultRepository.findMaxRelevance().orElse(0);
+        resultsCount = preResultRepository.getCount();
 
         return error == null ? getPartSearchResults(offset, limit) : new SearchResultDto(error);
     }
@@ -62,7 +72,7 @@ public class SearchServiceImpl implements SearchService{
             return new SearchResultDto(0, new ArrayList<>());
         }
 
-        List<PreResultEntity> resultPage = dataService.getPreResultRepository().getResultPage(offset, limit);
+        List<PreResultEntity> resultPage = preResultRepository.getResultPage(offset, limit);
         if (!resultPage.isEmpty()) {
             return new SearchResultDto(resultsCount, createSearchResultData(resultPage));
         } else {
@@ -117,21 +127,21 @@ public class SearchServiceImpl implements SearchService{
     }
 
     private String fillPreResultTableBySiteId (Integer siteId) {
-        List<LemmaEntity> lemmasToProcess = dataService.getLemmaRepository().findLemmasByNamesAndSiteId(queryLemmas, siteId);
+        List<LemmaEntity> lemmasToProcess = lemmaRepository.findLemmasByNamesAndSiteId(queryLemmas, siteId);
         if (lemmasToProcess == null || lemmasToProcess.size() < queryLemmas.size()) {
             return null;
         }
-        int pageCountOnSite = dataService.getPageRepository().countBySiteId(siteId);
+        int pageCountOnSite = pageRepository.countBySiteId(siteId);
         lemmasToProcess = oneSiteRemoveFrequentlyLemmas(lemmasToProcess, pageCountOnSite);
         if (lemmasToProcess.isEmpty()) {
             return "Неконкретный запрос. Задайте более строгие условия.";
         }
         Collections.sort(lemmasToProcess);
         List<Integer> pagesIdsFound = new ArrayList<>();
-        pagesIdsFound = dataService.getIndexRepository().findPagesIdsByLemmaIdAndSiteId(lemmasToProcess.get(0).getId(), siteId);
+        pagesIdsFound = indexRepository.findPagesIdsByLemmaIdAndSiteId(lemmasToProcess.get(0).getId(), siteId);
         if (lemmasToProcess.size() > 1) {
             for (int i = 1; i < lemmasToProcess.size(); i++) {
-                List<Integer> pagesIdsFoundNext = dataService.getIndexRepository().findPagesIdsByLemmaIdAndSiteId(lemmasToProcess.get(i).getId(), siteId);
+                List<Integer> pagesIdsFoundNext = indexRepository.findPagesIdsByLemmaIdAndSiteId(lemmasToProcess.get(i).getId(), siteId);
                 pagesIdsFound.retainAll(pagesIdsFoundNext);
             }
         }
@@ -140,13 +150,13 @@ public class SearchServiceImpl implements SearchService{
         }
 
         List<Integer> lemmasIdsToProcess = lemmasToProcess.stream().map(LemmaEntity::getId).toList();
-        dataService.getIndexRepository().fillPreResultTable(lemmasIdsToProcess, pagesIdsFound);
+        indexRepository.fillPreResultTable(lemmasIdsToProcess, pagesIdsFound);
 
         return null;
     }
 
     private void searchPreResultTableInit() {
-        dataService.getPreResultRepository().initPreResultTable();
+        preResultRepository.initPreResultTable();
     }
 
     private List<LemmaEntity> oneSiteRemoveFrequentlyLemmas (List<LemmaEntity> lemmasToProcess, int pagesCountOnSite) {
@@ -164,12 +174,12 @@ public class SearchServiceImpl implements SearchService{
     private String decodeSiteUrlToSiteIds(String siteUrl) {
         siteIds = new ArrayList<>();
         if (siteUrl == null) {
-            siteIds = dataService.getSiteRepository().findSiteIdsIndexed();
+            siteIds = siteRepository.findSiteIdsIndexed();
             if (siteIds.isEmpty()) {
                 return "Нет проиндексированных сайтов";
             }
         } else {
-            SiteEntity site = dataService.getSiteRepository().findByUrl(siteUrl);
+            SiteEntity site = siteRepository.findByUrl(siteUrl);
             if (site == null) {
                 return "Указанный сайт отсутствует в базе.";
             }

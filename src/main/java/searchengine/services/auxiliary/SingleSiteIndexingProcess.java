@@ -6,7 +6,7 @@ import org.springframework.dao.CannotAcquireLockException;
 import searchengine.config.Site;
 import searchengine.model.SiteEntity;
 import searchengine.model.SiteStatus;
-import searchengine.services.DataBaseConnectionService;
+import searchengine.model.repositories.*;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -15,15 +15,26 @@ import java.util.concurrent.ForkJoinPool;
 
 @Getter
 @Slf4j
-public class SingleSiteIndexingProcess extends Thread{
-    private final DataBaseConnectionService dataService;
+public class SingleSiteIndexingProcess extends Thread {
+
     private final Site site;
     private SiteEntity siteRecord;
     final Set<String> foundPages = ConcurrentHashMap.newKeySet();
 
-    public SingleSiteIndexingProcess(Site site, DataBaseConnectionService dataService) {
+    private final SiteRepository siteRepository;
+    private final LemmaRepository lemmaRepository;
+    private final IndexRepository indexRepository;
+    private final PageRepository pageRepository;
+    private final PreLemmaRepository preLemmaRepository;
+
+    public SingleSiteIndexingProcess(Site site, SiteRepository siteRepository, LemmaRepository lemmaRepository,
+                                     IndexRepository indexRepository, PageRepository pageRepository, PreLemmaRepository preLemmaRepository) {
         this.site = site;
-        this.dataService = dataService;
+        this.siteRepository = siteRepository;
+        this.lemmaRepository = lemmaRepository;
+        this.indexRepository = indexRepository;
+        this.pageRepository = pageRepository;
+        this.preLemmaRepository = preLemmaRepository;
     }
 
     @Override
@@ -39,7 +50,7 @@ public class SingleSiteIndexingProcess extends Thread{
         siteRecord.setUrl(site.getUrl());
         siteRecord.setStatus(SiteStatus.INDEXING);
         siteRecord.setStatusTime(LocalDateTime.now());
-        siteRecord = dataService.getSiteRepository().saveAndFlush(siteRecord);
+        siteRecord = siteRepository.saveAndFlush(siteRecord);
 
         foundPages.add("/");
         new ForkJoinPool().invoke(new PageIndexingRecursiveTask( "/", this));
@@ -47,7 +58,7 @@ public class SingleSiteIndexingProcess extends Thread{
         // TODO For debugging, remove later
         long end1 = System.currentTimeMillis();
 
-        CollectLemmasService.collectSingleSiteLemmas(siteRecord.getId());
+        CollectLemmasService.collectSingleSiteLemmas(siteRecord.getId(), lemmaRepository, indexRepository);
 
 
         // TODO For debugging, remove later
@@ -60,9 +71,9 @@ public class SingleSiteIndexingProcess extends Thread{
 
     @Override
     public void interrupt() {
-        Integer siteId = dataService.getSiteRepository().findSiteIdByUrl(site.getUrl());
+        Integer siteId = siteRepository.findSiteIdByUrl(site.getUrl());
         if (siteId != null) {
-            CollectLemmasService.collectSingleSiteLemmas(siteId);
+            CollectLemmasService.collectSingleSiteLemmas(siteId, lemmaRepository, indexRepository);
             updateSiteStatus(SiteStatus.FAILED, "Interrupted by user");
         }
         super.interrupt();
@@ -70,25 +81,25 @@ public class SingleSiteIndexingProcess extends Thread{
 
     private void deleteExistingInfo() {
 
-        Integer siteId = dataService.getSiteRepository().findSiteIdByUrl(site.getUrl());
+        Integer siteId = siteRepository.findSiteIdByUrl(site.getUrl());
         if (siteId != null) {
-            dataService.getLemmaRepository().deleteAllBySiteId(siteId);
-            dataService.getIndexRepository().deleteAllBySiteId(siteId);
-            dataService.getSiteRepository().deleteById(siteId);
+            lemmaRepository.deleteAllBySiteId(siteId);
+            indexRepository.deleteAllBySiteId(siteId);
+            siteRepository.deleteById(siteId);
             carefulDeletePages(siteId);
 
         }
     }
 
     public void updateSiteStatus(SiteStatus status, String lastError) {
-        dataService.getSiteRepository().updateSiteStatus(status.toString(), siteRecord.getUrl(), lastError, LocalDateTime.now());
+        siteRepository.updateSiteStatus(status.toString(), siteRecord.getUrl(), lastError, LocalDateTime.now());
     }
 
     private void carefulDeletePages(int siteId) {
         boolean unsuccessful = true;
         while (unsuccessful) {
             try {
-                dataService.getPageRepository().deleteAllBySiteIdEquals(siteId);
+                pageRepository.deleteAllBySiteIdEquals(siteId);
                 unsuccessful = false;
             } catch (CannotAcquireLockException ignored) {
             }
